@@ -13,9 +13,6 @@ Then input ./memory to start the program.
 Input “get\n<location>\n” to have memory.c print the text within the txt file.
 Input "set\n<location>\n<content_length>\n<contents>” to have memory.c set/change the text within the txt file into the contents that are set by the user. If the name is unknown then a new file will be made with the contents provided.
 
-## memory.h
-The header file for memory.c, contains necessary function names and definitions. 
-
 ## memory.c
 Implements get/set memory abstraction for files in a Linux directory. 
 
