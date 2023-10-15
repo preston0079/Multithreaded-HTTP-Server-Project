@@ -42,4 +42,4 @@ Implements get/set memory abstraction for files in a Linux directory.
 Compiles the files that are part of this assignment and make them executable.
 
 ## Comments
-
+Help recieved from classmate - work shown on whiteboard
