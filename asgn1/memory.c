@@ -12,7 +12,7 @@
 // Function to handle the "get" operation
 int get(int fd) {
     int bytes_read = 0;
-    char *buf = (char *)malloc(BUFFER_SIZE * sizeof(char));
+    char *buf = (char *) malloc(BUFFER_SIZE * sizeof(char));
 
     if (buf == NULL) {
         fprintf(stderr, "Operation Failed\n");
@@ -29,11 +29,11 @@ int get(int fd) {
             exit(1);
         } else if (bytes_read > 0) {
             int bytes_write = 0;
-            
+
             // Write data to standard output
             do {
                 int bytes = write(STDOUT_FILENO, buf + bytes_write, bytes_read - bytes_write);
-                
+
                 // Check for write errors
                 if (bytes <= 0) {
                     fprintf(stderr, "Operation Failed\n");
@@ -52,8 +52,8 @@ int get(int fd) {
 // Function to handle the "set" operation
 int set(int fd, size_t content_length) {
     int bytes_read = 0;
-    char *buf = (char *)malloc(BUFFER_SIZE * sizeof(char));
-    
+    char *buf = (char *) malloc(BUFFER_SIZE * sizeof(char));
+
     if (buf == NULL) {
         fprintf(stderr, "Operation Failed\n");
         exit(1);
@@ -71,7 +71,7 @@ int set(int fd, size_t content_length) {
             exit(1);
         } else if (bytes_read > 0) {
             ssize_t bytes_written = 0;
-            
+
             // Write data to the file descriptor
             do {
                 ssize_t bytes = write(fd, buf + bytes_written, bytes_read - bytes_written);
@@ -86,9 +86,9 @@ int set(int fd, size_t content_length) {
 
             // Update the total_bytes_read
             total_bytes_read += bytes_written;
-            
+
             // Check if content length is specified and if it has reached the specified length
-            if ((size_t)content_length > 0 && total_bytes_read >= (ssize_t)content_length) {
+            if ((size_t) content_length > 0 && total_bytes_read >= (ssize_t) content_length) {
                 break;
             }
         }
@@ -106,9 +106,9 @@ int main(void) {
     int buffer_index = 0;
     int buffer_index2 = 0;
 
-    char first_command[BUFFER_SIZE] = {0};
-    char location[BUFFER_SIZE] = {0};
-    char content_length_str[BUFFER_SIZE] = {0};
+    char first_command[BUFFER_SIZE] = { 0 };
+    char location[BUFFER_SIZE] = { 0 };
+    char content_length_str[BUFFER_SIZE] = { 0 };
     char temp;
     char first_byte;
     char buffer;
@@ -169,7 +169,7 @@ int main(void) {
         get(fd);
         close(fd);
     } else if (strcmp(first_command, "set") == 0) {
-        
+
         // Open the file for writing and call the set function
         fd = open(location, O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd < 0) {
@@ -213,7 +213,7 @@ int main(void) {
             fprintf(stdout, "OK\n");
             close(fd);
 
-        // Else: first_byte is not a digit so no content length is specified
+            // Else: first_byte is not a digit so no content length is specified
         } else {
 
             // Write the first byte to the file
@@ -223,7 +223,7 @@ int main(void) {
             close(fd);
         }
 
-    // Not get or set
+        // Not get or set
     } else {
         fprintf(stderr, "Invalid Command\n");
         exit(1);
@@ -231,5 +231,3 @@ int main(void) {
 
     return 0;
 }
-
-
