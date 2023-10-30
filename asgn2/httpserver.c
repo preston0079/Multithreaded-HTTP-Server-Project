@@ -166,14 +166,14 @@ int main(int argc, char **argv) {
 
     // Initialize the socket with the given port number
     if (listener_init(&sock, port) == -1) {
-        perror("Fail to init socket");
+        perror("Listener_init Failure");
         exit(1);
     }
 
     while (1) {
         acceptfd = listener_accept(&sock);
         if (acceptfd == -1) {
-            perror("Fail to acceptfd");
+            perror("Listener_accept Failure");
             exit(1);
         }
 
