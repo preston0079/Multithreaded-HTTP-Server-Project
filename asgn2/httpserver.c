@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    // Get the port number from command line arguments
+    // Check command line
     if (argc < 2) {
         fprintf(stderr, "Invalid Port Number\n");
         exit(1);
@@ -181,7 +181,6 @@ int main(int argc, char **argv) {
         bytes_read = read_command(acceptfd, request_buffer, BUFFER_SIZE);
         if (bytes_read < 0) {
             send_response(acceptfd, 500, 22); // Internal Server Error
-            perror("bytes_read < 0");
             exit(1);
         }
 
@@ -220,9 +219,9 @@ int main(int argc, char **argv) {
         } else if (check == 3) {
             send_response(acceptfd, 400, 12); // Bad Request
         } else if (check == 4) {
-            send_response(acceptfd, 505, 22); // HTTP Version Not Supported
+            send_response(acceptfd, 505, 22); // Version Not Supported
         } else if (check == 5) {
-            send_response(acceptfd, 505, 22); // HTTP Version Not Supported
+            send_response(acceptfd, 505, 22); // Version Not Supported
         }
 
         // Reset the buffers and close the client connection
