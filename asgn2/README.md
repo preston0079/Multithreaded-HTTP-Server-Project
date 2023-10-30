@@ -30,4 +30,5 @@ Implementation of http server. Commands available are GET and PUT.
 Compiles the files that are part of this assignment and make them executable. 
 
 ## Comments
+HELP REVIEVED FROM CLASSMATE IN LIBRARY - WORK DONE OVER WHITEBOARD, NO CODE WAS SHARED
 
