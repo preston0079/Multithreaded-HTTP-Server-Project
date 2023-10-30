@@ -47,7 +47,7 @@ ssize_t read_command(int socket_fd, char *buffer, size_t max_length) {
 }
 
 // Function to send an HTTP response to the client
-void sentresponse(int client_socket, int status, int content_length) {
+void send_response(int client_socket, int status, int content_length) {
     char response[1024];
 
     // Compose an HTTP response with status, content length, and a message
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
         // Read the request from the socket on the client side
         bytes_read = read_command(acceptfd, request_buffer, BUFFER_SIZE);
         if (bytes_read < 0) {
-            sentresponse(acceptfd, 500, 22); // Internal Server Error
+            send_response(acceptfd, 500, 22); // Internal Server Error
             perror("bytes_read < 0");
             exit(1);
         }
@@ -198,31 +198,31 @@ int main(int argc, char **argv) {
                     size_t size = st.st_size;
                     fd = open(uri + 1, O_RDONLY);
                     if (fd == -1) {
-                        sentresponse(acceptfd, 404, 10); // Not Found
+                        send_response(acceptfd, 404, 10); // Not Found
                     } else {
-                        sentresponse(acceptfd, 200, size); // OK
+                        send_response(acceptfd, 200, size); // OK
                         int i = pass_n_bytes(fd, acceptfd, size);
                     }
                     close(fd);
                 } else {
-                    sentresponse(acceptfd, 403, 10); // Forbidden
+                    send_response(acceptfd, 403, 10); // Forbidden
                 }
             } else if (strcmp(method, "PUT") == 0) {
                 // Handle PUT request
 
             } else {
-                sentresponse(acceptfd, 501, 16); // Not Implemented
+                send_response(acceptfd, 501, 16); // Not Implemented
             }
         } else if (check == 1) {
-            sentresponse(acceptfd, 400, 12); // Bad Request
+            send_response(acceptfd, 400, 12); // Bad Request
         } else if (check == 2) {
-            sentresponse(acceptfd, 501, 16); // Not Implemented
+            send_response(acceptfd, 501, 16); // Not Implemented
         } else if (check == 3) {
-            sentresponse(acceptfd, 400, 12); // Bad Request
+            send_response(acceptfd, 400, 12); // Bad Request
         } else if (check == 4) {
-            sentresponse(acceptfd, 505, 22); // HTTP Version Not Supported
+            send_response(acceptfd, 505, 22); // HTTP Version Not Supported
         } else if (check == 5) {
-            sentresponse(acceptfd, 505, 22); // HTTP Version Not Supported
+            send_response(acceptfd, 505, 22); // HTTP Version Not Supported
         }
 
         // Reset the buffers and close the client connection
