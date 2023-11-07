@@ -17,8 +17,8 @@ CFLAGS   = -Wall -Wextra -Werror -pedantic
 
 all: $(EXECBINS)
 
-#$(EXECBIN): $(OBJECTS)
-#	$(CC) -o $@ $^
+$(EXECBIN): $(OBJECTS)
+	$(CC) -o $@ $^
 
 %: %.o
 	$(CC) -o $@ $^
