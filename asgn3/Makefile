@@ -31,14 +31,28 @@
 # format:
 # 	clang-format -i -style=file *.[ch]
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 EXECBINS  = queue rwlock
 SOURCES  = $(wildcard *.c)
 OBJECTS  = $(SOURCES:%.c=%.o)
-FORMATS  = $(SOURCES:%.c=%.fmt)
+# FORMATS  = $(SOURCES:%.c=%.fmt)
 
 CC       = clang
-FORMAT   = clang-format
-CFLAGS   = -Wall -Wpedantic -Werror -Wextra -g
+FORMAT   = .clang-format
+CFLAGS   = -Wall -Wextra -Werror -pedantic
 
 .PHONY: all clean format
 
@@ -56,10 +70,12 @@ all: $(EXECBINS)
 clean:
 	rm -f $(EXECBINS) $(OBJECTS)
 
-format: $(FORMATS)
+# format: $(FORMATS)
+format:
+	clang-format -i -style=file *.[ch]
 
-%.fmt: %.c
-	$(FORMAT) -i $<
-	touch $@
+# %.fmt: %.c
+# 	$(FORMAT) -i $<
+# 	touch $@
 
 
