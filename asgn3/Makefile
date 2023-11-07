@@ -4,47 +4,6 @@
 #asgn3
 #------------------------------------------------------------------------------
 
-# FORMATS  = $(SOURCES:%.c=%.fmt)
-
-
-# CC       = clang
-# CFLAGS   = -Wall -Wpedantic -Werror -Wextra
-
-# all: queue rwlock
-
-# queue: queue.o
-# 	$(CC) -o queue queue.o
-
-# rwlock: rwlock.o
-# 	$(CC) -o rwlock rwlock.o
-
-
-# %: %.o
-# 	$(CC) -o $@ $^
-
-# %.o: %.c
-# 	$(CC) $(CFLAGS) -c $<
-
-# clean:
-# 	rm -f queue rwlock *.o
-
-# format:
-# 	clang-format -i -style=file *.[ch]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 EXECBINS  = queue rwlock
 SOURCES  = $(wildcard *.c)
 OBJECTS  = $(SOURCES:%.c=%.o)
@@ -70,12 +29,8 @@ all: $(EXECBINS)
 clean:
 	rm -f $(EXECBINS) $(OBJECTS)
 
-# format: $(FORMATS)
 format:
 	clang-format -i -style=file *.[ch]
 
-# %.fmt: %.c
-# 	$(FORMAT) -i $<
-# 	touch $@
 
 
