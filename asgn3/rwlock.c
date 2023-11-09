@@ -7,18 +7,19 @@
 
 // Define the structure for the reader-writer lock
 typedef struct rwlock {
-    int readers;                // Number of current readers
-    int writers;                // Number of current writers
-    int n;                      // N-WAY parameter
-    PRIORITY priority;          // Reader-writer lock priority
-    pthread_mutex_t mutex;      // Mutex for thread safety
+    int readers; // Number of current readers
+    int writers; // Number of current writers
+    int n; // N-WAY parameter
+    PRIORITY priority; // Reader-writer lock priority
+    pthread_mutex_t mutex; // Mutex for thread safety
     pthread_cond_t readers_cond; // Condition variable for readers
     pthread_cond_t writers_cond; // Condition variable for writers
 } rwlock_t;
 
 // Create a new reader-writer lock
 rwlock_t *rwlock_new(PRIORITY p, uint32_t n) {
-    rwlock_t *rwlock = (rwlock_t *)malloc(sizeof(rwlock_t)); // Allocate memory for the reader-writer lock
+    rwlock_t *rwlock
+        = (rwlock_t *) malloc(sizeof(rwlock_t)); // Allocate memory for the reader-writer lock
     if (rwlock == NULL) {
         return NULL;
     }
@@ -72,7 +73,8 @@ void reader_unlock(rwlock_t *rw) {
     rw->readers--; // Decrement the number of readers
 
     if (rw->readers == 0) {
-        pthread_cond_signal(&rw->writers_cond); // Signal a waiting writer if there are no more readers
+        pthread_cond_signal(
+            &rw->writers_cond); // Signal a waiting writer if there are no more readers
     }
 
     pthread_mutex_unlock(&rw->mutex);
@@ -97,12 +99,11 @@ void writer_unlock(rwlock_t *rw) {
     rw->writers--; // Decrement the number of writers
 
     if (rw->priority == N_WAY && rw->writers == 0) {
-        pthread_cond_broadcast(&rw->readers_cond); // Broadcast to waiting readers for N-WAY priority
+        pthread_cond_broadcast(
+            &rw->readers_cond); // Broadcast to waiting readers for N-WAY priority
     } else {
         pthread_cond_signal(&rw->writers_cond); // Signal a waiting writer
     }
 
     pthread_mutex_unlock(&rw->mutex);
 }
-
-

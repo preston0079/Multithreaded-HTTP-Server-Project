@@ -7,28 +7,28 @@
 
 // Define the queue structure
 struct queue {
-    int size;                 // Maximum size of the queue
-    int front;                // Index for the front of the queue
-    int end;                  // Index for the end of the queue
-    void **data;              // Data array to store elements
-    pthread_mutex_t mutex;    // Mutex for thread safety
+    int size; // Maximum size of the queue
+    int front; // Index for the front of the queue
+    int end; // Index for the end of the queue
+    void **data; // Data array to store elements
+    pthread_mutex_t mutex; // Mutex for thread safety
     pthread_cond_t not_empty; // Condition variable for non-empty queue
-    pthread_cond_t not_full;  // Condition variable for non-full queue
+    pthread_cond_t not_full; // Condition variable for non-full queue
 };
 
 // Create a new queue with the specified size
 queue_t *queue_new(int size) {
-    queue_t *q = (queue_t *)malloc(sizeof(queue_t)); // Allocate memory for the queue
+    queue_t *q = (queue_t *) malloc(sizeof(queue_t)); // Allocate memory for the queue
     if (q == NULL) {
         return NULL;
     }
 
     q->size = size; // Set the maximum size of the queue
-    q->front = 0;  // Initialize the front index
-    q->end = 0;   // Initialize the last index
+    q->front = 0; // Initialize the front index
+    q->end = 0; // Initialize the last index
 
     // Allocate memory for the data array to store elements
-    q->data = (void **)malloc(sizeof(void *) * size);
+    q->data = (void **) malloc(sizeof(void *) * size);
     if (q->data == NULL) {
         free(q);
         return NULL;
@@ -51,7 +51,7 @@ void queue_delete(queue_t **q) {
     }
 
     queue_t *queue = *q; // Get the pointer to the queue
-    free(queue->data);   // Free the memory used by the data array
+    free(queue->data); // Free the memory used by the data array
 
     // Destroy the mutex and condition variables
     pthread_mutex_destroy(&queue->mutex);
@@ -59,7 +59,7 @@ void queue_delete(queue_t **q) {
     pthread_cond_destroy(&queue->not_full);
 
     free(queue); // Free the memory used by the queue
-    *q = NULL;   // Set the pointer to the queue to NULL
+    *q = NULL; // Set the pointer to the queue to NULL
 }
 
 // Push an element onto the queue
