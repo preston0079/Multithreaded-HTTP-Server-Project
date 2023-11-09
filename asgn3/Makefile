@@ -4,7 +4,7 @@
 #asgn3
 #------------------------------------------------------------------------------
 
-EXECBINS  = queue rwlock
+EXECBINS  = queue.o rwlock.o
 SOURCES  = $(wildcard *.c)
 OBJECTS  = $(SOURCES:%.c=%.o)
 # FORMATS  = $(SOURCES:%.c=%.fmt)
