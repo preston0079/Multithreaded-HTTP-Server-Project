@@ -20,7 +20,7 @@ struct queue {
 queue_t *queue_new(int size) {
 
     // Allocate memory for the queue
-    queue_t *q = (queue_t *) malloc(sizeof(queue_t)); 
+    queue_t *q = (queue_t *) malloc(sizeof(queue_t));
     if (q == NULL) {
         return NULL;
     }
