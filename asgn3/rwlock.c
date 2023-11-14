@@ -5,12 +5,15 @@
 
 #include "rwlock.h"
 
-// Structure re-used from lecture
-// Help recieved from classmates, all work shown on whiteboard, no code was shared
+#include <assert.h>
+
+// Referenced textbook: Tom Anderson and Mike Dahlin’s Operating Systems: Principle and Practice Volume II: Concurency
 
 typedef struct rwlock {
     int reader; // Number of current readers
     int writer; // Number of current writers
+    int waiting_readers;
+    int waiting_writers;
 
     int n; // N-WAY parameter
     PRIORITY priority; // Reader-writer lock priority (READERS, WRITERS, N_WAY)
@@ -28,8 +31,12 @@ rwlock_t *rwlock_new(PRIORITY p, uint32_t n) {
         return NULL;
     }
 
-    rwlock->reader = 0; // Set current readers to 0
-    rwlock->writer = 0; // Set current writers to 0
+    rwlock->reader = 0; // Set current/active readers to 0
+    rwlock->writer = 0; // Set current/active writers to 0
+
+    rwlock->waiting_readers = 0; // Set waiting readers to 0
+    rwlock->waiting_writers = 0; // set waiting writers to 0
+
     rwlock->n = n; // Set N-WAY parameter
     rwlock->priority = p; // Set priority
 
@@ -41,10 +48,10 @@ rwlock_t *rwlock_new(PRIORITY p, uint32_t n) {
     return rwlock;
 }
 
-void rwlock_delete(rwlock_t **l) {
+void rwlock_delete(rwlock_t **rw) {
 
-    if (l != NULL || *l != NULL) {
-        rwlock_t *rwlock = *l;
+    if (rw != NULL || *rw != NULL) {
+        rwlock_t *rwlock = *rw;
 
         // Destroy the mutex and condition variables
         pthread_mutex_destroy(&rwlock->mutex);
@@ -52,7 +59,7 @@ void rwlock_delete(rwlock_t **l) {
         pthread_cond_destroy(&rwlock->writer_cond_var);
 
         free(rwlock); // Free the memory for rwlock
-        *l = NULL; // Set the pointer to NULL
+        *rw = NULL; // Set the pointer to NULL
     }
 }
 
@@ -60,12 +67,13 @@ void reader_lock(rwlock_t *rw) {
 
     pthread_mutex_lock(&rw->mutex); // Lock the mutex
 
-    // Wait while there are writers OR (the priority is set to WRITERS and there are readers)
-    while ((rw->writer > 0) || (rw->priority == WRITERS && rw->reader > 0)) {
+    rw->waiting_readers++;
+    while (rw->writer > 0 || rw->waiting_writers > 0) {
         pthread_cond_wait(&rw->reader_cond_var, &rw->mutex);
     }
+    rw->waiting_readers--;
+    rw->reader++;
 
-    rw->reader++; // Increment the number of readers
     pthread_mutex_unlock(&rw->mutex); // Unlock mutex
 }
 
@@ -73,10 +81,8 @@ void reader_unlock(rwlock_t *rw) {
 
     pthread_mutex_lock(&rw->mutex); // Lock the mutex
 
-    rw->reader--; // Decrement the number of readers
-
-    // Signal a waiting writer if there are no more readers
-    if (rw->reader == 0) {
+    rw->reader--;
+    if (rw->reader == 0 && rw->waiting_writers > 0) {
         pthread_cond_signal(&rw->writer_cond_var);
     }
 
@@ -87,12 +93,12 @@ void writer_lock(rwlock_t *rw) {
 
     pthread_mutex_lock(&rw->mutex); // Lock the mutex
 
-    // Wait while there are readers OR writers
-    while ((rw->reader > 0) || (rw->writer > 0)) {
+    rw->waiting_writers++;
+    while (rw->writer > 0 || rw->reader > 0) {
         pthread_cond_wait(&rw->writer_cond_var, &rw->mutex);
     }
-
-    rw->writer++; // Increment the number of writers
+    rw->waiting_writers--;
+    rw->writer++;
 
     pthread_mutex_unlock(&rw->mutex); // Unlock mutex
 }
@@ -101,14 +107,12 @@ void writer_unlock(rwlock_t *rw) {
 
     pthread_mutex_lock(&rw->mutex); // Lock the mutex
 
-    rw->writer--; // Decrement the number of writers
-
-    // Broadcast to waiting readers for N-WAY priority
-    if (rw->priority == N_WAY && rw->writer == 0) {
-        // Professor Quinn mentioned after lecture that broadcast can be used
-        pthread_cond_broadcast(&rw->reader_cond_var);
+    rw->writer--;
+    assert(rw->writer == 0);
+    if (rw->waiting_writers > 0) {
+        pthread_cond_signal(&rw->writer_cond_var);
     } else {
-        pthread_cond_signal(&rw->writer_cond_var); // Signal a waiting writer
+        pthread_cond_broadcast(&rw->reader_cond_var);
     }
 
     pthread_mutex_unlock(&rw->mutex); // Unlock the mutex
