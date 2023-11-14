@@ -23,5 +23,5 @@ Compiles the files that are part of this assignment and make them executable.
 
 ## Comments
 
-Help recieved from classmates at library, all work shown on whiteboard, no code was shared.
+Help recieved from classmates, all work shown on whiteboard, no code was shared.
 

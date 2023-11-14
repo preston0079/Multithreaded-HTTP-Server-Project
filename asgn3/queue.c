@@ -6,12 +6,14 @@
 #include "queue.h"
 
 // Work from previous class was referenced
+// Help recieved from classmates
 
 struct queue {
     int size; // Maximum size of the queue
     int front; // Index for the front of the queue
     int end; // Index for the end of the queue
     void **data; // Data array
+
     pthread_mutex_t mutex; // Mutex
     pthread_cond_t not_empty; // Condition variable for not-empty queue
     pthread_cond_t not_full; // Condition variable for not-full queue
@@ -21,6 +23,7 @@ queue_t *queue_new(int size) {
 
     // Allocate memory for the queue
     queue_t *q = (queue_t *) malloc(sizeof(queue_t));
+    // Assert
     if (q == NULL) {
         return NULL;
     }
@@ -31,6 +34,7 @@ queue_t *queue_new(int size) {
 
     // Allocate memory for the data
     q->data = (void **) malloc(sizeof(void *) * size);
+    // Assert
     if (q->data == NULL) {
         free(q);
         return NULL;
@@ -47,20 +51,19 @@ queue_t *queue_new(int size) {
 }
 
 void queue_delete(queue_t **q) {
-    if (q == NULL || *q == NULL) {
-        return;
+
+    if (q != NULL || *q != NULL) {
+        queue_t *queue = *q;
+        free(queue->data); // Free data array
+
+        // Destroy the mutex and condition variables
+        pthread_mutex_destroy(&queue->mutex);
+        pthread_cond_destroy(&queue->not_empty);
+        pthread_cond_destroy(&queue->not_full);
+
+        free(queue); // Free queue
+        *q = NULL; // Set pointer to NULL
     }
-
-    queue_t *queue = *q;
-    free(queue->data); // Free data array
-
-    // Destroy the mutex and condition variables
-    pthread_mutex_destroy(&queue->mutex);
-    pthread_cond_destroy(&queue->not_empty);
-    pthread_cond_destroy(&queue->not_full);
-
-    free(queue); // Free queue
-    *q = NULL; // Set pointer to NULL
 }
 
 bool queue_push(queue_t *q, void *elem) {
@@ -75,6 +78,7 @@ bool queue_push(queue_t *q, void *elem) {
     // Followed structure from lectures
     q->data[q->end] = elem;
     q->end = (q->end + 1) % q->size;
+    // q->size++;
 
     // Signal that the queue is not empty and unlock the mutex
     pthread_cond_signal(&q->not_empty);
@@ -95,6 +99,7 @@ bool queue_pop(queue_t *q, void **elem) {
     // Followed structure from lectures
     *elem = q->data[q->front];
     q->front = (q->front + 1) % q->size;
+    // q->size--;
 
     // Signal that the queue is not full and unlock the mutex
     pthread_cond_signal(&q->not_full);

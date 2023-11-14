@@ -5,11 +5,16 @@
 
 #include "rwlock.h"
 
+// Structure re-used from lecture
+// Help recieved from classmates, all work shown on whiteboard, no code was shared
+
 typedef struct rwlock {
     int reader; // Number of current readers
     int writer; // Number of current writers
+
     int n; // N-WAY parameter
     PRIORITY priority; // Reader-writer lock priority (READERS, WRITERS, N_WAY)
+
     pthread_mutex_t mutex; // Mutex
     pthread_cond_t reader_cond_var; // Condition variable for readers
     pthread_cond_t writer_cond_var; // Condition variable for writers
@@ -18,6 +23,7 @@ typedef struct rwlock {
 rwlock_t *rwlock_new(PRIORITY p, uint32_t n) {
     // Allocate memory for rwlock
     rwlock_t *rwlock = (rwlock_t *) malloc(sizeof(rwlock_t));
+    // Assert
     if (rwlock == NULL) {
         return NULL;
     }
@@ -36,19 +42,18 @@ rwlock_t *rwlock_new(PRIORITY p, uint32_t n) {
 }
 
 void rwlock_delete(rwlock_t **l) {
-    if (l == NULL || *l == NULL) {
-        return;
+
+    if (l != NULL || *l != NULL) {
+        rwlock_t *rwlock = *l;
+
+        // Destroy the mutex and condition variables
+        pthread_mutex_destroy(&rwlock->mutex);
+        pthread_cond_destroy(&rwlock->reader_cond_var);
+        pthread_cond_destroy(&rwlock->writer_cond_var);
+
+        free(rwlock); // Free the memory for rwlock
+        *l = NULL; // Set the pointer to NULL
     }
-
-    rwlock_t *rwlock = *l;
-
-    // Destroy the mutex and condition variables
-    pthread_mutex_destroy(&rwlock->mutex);
-    pthread_cond_destroy(&rwlock->reader_cond_var);
-    pthread_cond_destroy(&rwlock->writer_cond_var);
-
-    free(rwlock); // Free the memory for rwlock
-    *l = NULL; // Set the pointer to NULL
 }
 
 void reader_lock(rwlock_t *rw) {
