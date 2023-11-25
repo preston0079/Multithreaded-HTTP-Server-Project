@@ -160,7 +160,6 @@
 //     conn_send_response(conn, &RESPONSE_NOT_IMPLEMENTED);
 // }
 
-
-int main(){
-   return 0; 
+int main() {
+    return 0;
 }
