@@ -12,6 +12,7 @@
 
 #include "asgn2_helper_funcs.h"
 #include "connection.h"
+#include "queue.h"
 #include "response.h"
 #include "request.h"
 #include "rwlock.h"
