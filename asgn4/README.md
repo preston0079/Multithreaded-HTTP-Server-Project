@@ -22,20 +22,28 @@ Implementation is similar to asgn2:
 Terminal Example: 
 
 GET /a.txt HTTP/1.1\r\nRequest-Id: 1\r\n\r\n
+
 GET /b.txt HTTP/1.1\r\nRequest-Id: 2\r\n\r\n
+
 PUT /b.txt HTTP/1.1\r\nRequest-Id: 3\r\nContent-Length: 3 \r\n\r\nbye
+
 GET /b.txt HTTP/1.1\r\n\r\n
+
 
 Audit Log will reflect Example:
 
 GET,/a.txt,200,1
+
 GET,/b.txt,404,2
+
 PUT,/b.txt,201,3
+
 GET,/b.txt,200,0
+
 
 ## httpserver.c
 
-Implementation of http server. Commands available are GET and PUT.
+Implementation of http server.
 
 ## Makefile
 
