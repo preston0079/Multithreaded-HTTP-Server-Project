@@ -291,8 +291,10 @@ void handle_get(conn_t *conn) {
         res = &RESPONSE_OK;
     }
 
+    // Audit log
     fprintf(stderr, "GET,%s,%hu,%s\n", uri, response_get_code(res),
         conn_get_header(conn, "Request-Id"));
+
     reader_unlock(rwlock);
     close(fd);
 }
@@ -348,9 +350,13 @@ void handle_put(conn_t *conn) {
         res = &RESPONSE_CREATED;
     }
 
+    conn_send_response(conn, res);
+
+
+    // Audit log
     fprintf(stderr, "PUT,%s,%hu,%s\n", uri, response_get_code(res),
         conn_get_header(conn, "Request-Id"));
-    conn_send_response(conn, res);
+
     writer_unlock(rwlock);
     close(fd);
 }
