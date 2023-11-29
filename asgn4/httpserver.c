@@ -19,7 +19,7 @@
 #include "request.h"
 #include "rwlock.h"
 
-// Work used from previous class - hash table functions
+// Work used from previous class
 // Help recieved from classmate, all help shown on whiteboard no code was shared
 
 typedef struct rwlockHTNodeObj {
@@ -54,8 +54,6 @@ typedef ThreadObj *Thread;
 queue_t *queue;
 // rwlockHT *rwlock_table;
 
-Table *hashtable;
-
 pthread_mutex_t mutex;
 pthread_mutex_t table_mutex;
 pthread_mutex_t audit_lock;
@@ -66,6 +64,8 @@ Table *create_table(size_t num_buckets) {
     t->num_buckets = num_buckets; //set size of the hashtable
     return t;
 }
+
+Table *hashtable;
 
 unsigned long hash(char *str) {
     unsigned long hash = 5381;
@@ -79,36 +79,36 @@ unsigned long hash(char *str) {
     return hash;
 }
 
-rwlockHTNodeObj *add_node_to_list(char *URI, rwlock_t *rwlock, rwlockHTNodeObj *bucket) {
+rwlockHTNodeObj *add_node_to_list(char *uri, rwlock_t *rwlock, rwlockHTNodeObj *bucket) {
     rwlockHTNodeObj *new_node;
     new_node = calloc(1, sizeof(rwlockHTNodeObj));
-    new_node->uri = strdup(URI);
+    new_node->uri = strdup(uri);
     new_node->rwlock = rwlock;
     new_node->next = bucket;
     return new_node;
 }
 
-void add_to_table(char *URI, rwlock_t *rwlock, Table *table) {
-    unsigned long hashvalue = hash(URI);
+void add_to_table(char *uri, rwlock_t *rwlock, Table *table) {
+    unsigned long hashvalue = hash(uri);
     size_t index = hashvalue % table->num_buckets;
     rwlockHTNodeObj *linkedlist = (table->buckets)[index];
-    while (linkedlist && strcmp((linkedlist->uri), URI) != 0) {
+    while (linkedlist && strcmp((linkedlist->uri), uri) != 0) {
         linkedlist = linkedlist->next;
     }
     if (linkedlist != NULL) {
         free(linkedlist->rwlock);
         linkedlist->rwlock = rwlock;
     } else {
-        (table->buckets)[index] = add_node_to_list(URI, rwlock, (table->buckets)[index]);
+        (table->buckets)[index] = add_node_to_list(uri, rwlock, (table->buckets)[index]);
     }
     return;
 }
 
-rwlockHTNodeObj *find_URI(char *URI, Table *table) {
-    size_t index = hash(URI) % (table->num_buckets);
+rwlockHTNodeObj *find_URI(char *uri, Table *table) {
+    size_t index = hash(uri) % (table->num_buckets);
     rwlockHTNodeObj *linkedlist = (table->buckets)[index];
     while (linkedlist != NULL) {
-        if (strcmp(linkedlist->uri, URI) == 0) {
+        if (strcmp(linkedlist->uri, uri) == 0) {
             return linkedlist;
         }
         linkedlist = linkedlist->next;
@@ -157,6 +157,8 @@ int main(int argc, char **argv) {
     Listener_Socket sock;
     listener_init(&sock, port);
 
+    hashtable = create_table(100);
+
     // Thread threads[t];
     ThreadObj *threads[t];
     Table *rwlock_ht = create_table(100);
@@ -164,7 +166,7 @@ int main(int argc, char **argv) {
     pthread_t *thread_ids = malloc(sizeof(pthread_t) * t);
 
     // Create worker threads
-    for (size_t i = 0; i <= t; ++i) {
+    for (size_t i = 0; i < t; ++i) {
         threads[i] = malloc(sizeof(ThreadObj));
         threads[i]->id = i;
         threads[i]->rwlockHT = rwlock_ht;
