@@ -230,7 +230,6 @@ void handle_get(conn_t *conn) {
     // debug("GET request no implemented. But we want to get %s", uri);
     bool existed = access(uri, F_OK) == 0;
 
-    // get_rwlock---------------------------------
     pthread_mutex_lock(&table_mutex);
     rwlock_t *rwlock;
     rwlockHTNodeObj *node;
@@ -242,7 +241,6 @@ void handle_get(conn_t *conn) {
         add_to_table(uri, rwlock, hashtable);
     }
     pthread_mutex_unlock(&table_mutex);
-    // get_rwlock---------------------------------
 
     reader_lock(rwlock);
 
@@ -302,7 +300,6 @@ void handle_put(conn_t *conn) {
     // Check if file already exists before opening it.
     bool existed = access(uri, F_OK) == 0;
 
-    // get_rwlock---------------------------------
     pthread_mutex_lock(&table_mutex);
     rwlock_t *rwlock;
     rwlockHTNodeObj *node;
@@ -314,7 +311,6 @@ void handle_put(conn_t *conn) {
         add_to_table(uri, rwlock, hashtable);
     }
     pthread_mutex_unlock(&table_mutex);
-    // get_rwlock---------------------------------
 
     writer_lock(rwlock);
 
