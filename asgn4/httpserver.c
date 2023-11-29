@@ -80,31 +80,37 @@ unsigned long hash(char *str) {
     return hash;
 }
 
-// Function to create a new node and add it to the linked list
-rwlockHTNodeObj *add_node_to_list(char *uri, rwlock_t *rwlock, rwlockHTNodeObj *bucket) {
-    rwlockHTNodeObj *new_node;
-    new_node = calloc(1, sizeof(rwlockHTNodeObj));
-    new_node->uri = strdup(uri);
-    new_node->rwlock = rwlock;
-    new_node->next = bucket;
-    return new_node;
-}
-
 // Function to add a new node to the hash table
 void add_to_hash_table(char *uri, rwlock_t *rwlock, Table *table) {
     unsigned long hashvalue = hash(uri);
     size_t index = hashvalue % table->num_buckets;
+
     rwlockHTNodeObj *linkedlist = (table->buckets)[index];
-    while (linkedlist && strcmp((linkedlist->uri), uri) != 0) {
+    rwlockHTNodeObj *prevNode = NULL;
+
+    while (linkedlist != NULL && strcmp(linkedlist->uri, uri) != 0) {
+        prevNode = linkedlist;
         linkedlist = linkedlist->next;
     }
+
     if (linkedlist != NULL) {
         free(linkedlist->rwlock);
         linkedlist->rwlock = rwlock;
     } else {
-        (table->buckets)[index] = add_node_to_list(uri, rwlock, (table->buckets)[index]);
+        // If the node is not found, create a new node and add it to the list
+        rwlockHTNodeObj *new_node = calloc(1, sizeof(rwlockHTNodeObj));
+        new_node->uri = strdup(uri);
+        new_node->rwlock = rwlock;
+        new_node->next = NULL;
+
+        // If there's a previous node, link it to the new node
+        if (prevNode != NULL) {
+            prevNode->next = new_node;
+        } else {
+            // Else it's the first node in the list
+            (table->buckets)[index] = new_node;
+        }
     }
-    return;
 }
 
 // Function to find a node with URI in the hash table
@@ -167,7 +173,6 @@ int main(int argc, char **argv) {
 
     // Thread threads[t];
     ThreadObj *threads[t];
-    Table *rwlock_ht = create_table(100);
     queue_t *queue = queue_new(t);
     pthread_t *thread_ids = malloc(sizeof(pthread_t) * t);
 
@@ -175,7 +180,7 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < t; ++i) {
         threads[i] = malloc(sizeof(ThreadObj));
         threads[i]->id = i;
-        threads[i]->rwlockHT = rwlock_ht;
+        threads[i]->rwlockHT = hashtable;
         threads[i]->queue = queue;
 
         pthread_create(
