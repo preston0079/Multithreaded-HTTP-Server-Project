@@ -21,6 +21,7 @@
 
 // Work used from previous class, hash functions taken from previous class
 // Help recieved from classmate, all help shown on whiteboard no code was shared
+// TA Mitchell pseudo code used
 
 typedef struct rwlockHTNodeObj {
     char *uri;
