@@ -13,7 +13,7 @@
 
 #include "asgn2_helper_funcs.h"
 #include "connection.h"
-#include "debug.h"
+//#include "debug.h"
 #include "queue.h"
 #include "response.h"
 #include "request.h"
@@ -28,7 +28,7 @@ typedef struct rwlockHTNodeObj {
     struct rwlockHTNodeObj *next;
 } rwlockHTNodeObj;
 
-typedef rwlockHTNodeObj* rwlockHTNode;
+typedef rwlockHTNodeObj *rwlockHTNode;
 
 typedef struct rwlockHTObj {
     rwlock_t **rwlocks;
@@ -56,15 +56,15 @@ queue_t *queue;
 
 Table *hashtable;
 
-pthread_mutex_t file_lock;
+pthread_mutex_t mutex;
 pthread_mutex_t table_mutex;
 pthread_mutex_t audit_lock;
 
 Table *create_table(size_t num_buckets) {
-	Table* t = calloc(1,sizeof(Table)); //allocate space for the table
-	t->buckets = calloc(num_buckets, sizeof(rwlockHTNodeObj*)); //allocate space for the array of buckets
-	t->num_buckets = num_buckets; //set the number of buckets/size of the hashtable
-	return t;
+    Table *t = calloc(1, sizeof(Table)); //allocate space for the table
+    t->buckets = calloc(num_buckets, sizeof(rwlockHTNodeObj *)); //allocate space for the array
+    t->num_buckets = num_buckets; //set size of the hashtable
+    return t;
 }
 
 unsigned long hash(char *str) {
@@ -73,58 +73,47 @@ unsigned long hash(char *str) {
 
     while (*str != '\0') {
         c = *str;
-        hash = ((hash << 5) + hash) + (unsigned char)c; // hash * 33 + c
+        hash = ((hash << 5) + hash) + (unsigned char) c; // hash * 33 + c
         str++;
     }
     return hash;
 }
 
 rwlockHTNodeObj *add_node_to_list(char *URI, rwlock_t *rwlock, rwlockHTNodeObj *bucket) {
-	rwlockHTNodeObj* new_node;
-	new_node = calloc(1, sizeof(rwlockHTNodeObj));
-	new_node->uri = strdup(URI);
-	new_node->rwlock = rwlock;
-	new_node->next = bucket; //attach node to rest of linked list
-	return new_node;
+    rwlockHTNodeObj *new_node;
+    new_node = calloc(1, sizeof(rwlockHTNodeObj));
+    new_node->uri = strdup(URI);
+    new_node->rwlock = rwlock;
+    new_node->next = bucket;
+    return new_node;
 }
 
-void add_to_table(char *URI, rwlock_t *rwlock, Table *table) { //adds a customer to a table; code adapted from demo
-	unsigned long hashvalue = hash(URI);
-	size_t index = hashvalue % table->num_buckets;
-	rwlockHTNodeObj *linkedlist = (table->buckets)[index];
-	//need to consider if customer email is already in there
-	while(linkedlist && strcmp((linkedlist->uri),URI)!= 0)
-	{
-		linkedlist = linkedlist->next;
-	}
-	//we found a linked list node that matches our email that we had previously hashed
-	if(linkedlist != NULL) 
-	{
-		//if email is already in there, we put a new entry containing the newly entered attributes
-        //will have to modify after thinking some more
-		free(linkedlist->rwlock);
-		linkedlist->rwlock = rwlock;
-	}
-	//else, we have a new customer that we need to add to our table and bucket
-	else
-	{
-		(table->buckets)[index] = add_node_to_list(URI, rwlock, (table->buckets)[index]); //puts a new node into that bucket
-	}
-	return;	
+void add_to_table(char *URI, rwlock_t *rwlock, Table *table) {
+    unsigned long hashvalue = hash(URI);
+    size_t index = hashvalue % table->num_buckets;
+    rwlockHTNodeObj *linkedlist = (table->buckets)[index];
+    while (linkedlist && strcmp((linkedlist->uri), URI) != 0) {
+        linkedlist = linkedlist->next;
+    }
+    if (linkedlist != NULL) {
+        free(linkedlist->rwlock);
+        linkedlist->rwlock = rwlock;
+    } else {
+        (table->buckets)[index] = add_node_to_list(URI, rwlock, (table->buckets)[index]);
+    }
+    return;
 }
 
-rwlockHTNodeObj* find_URI(char* URI, Table* table) {
-	size_t index = hash(URI) % (table->num_buckets);
-	rwlockHTNodeObj *linkedlist = (table->buckets)[index];
-	while(linkedlist != NULL)
-	{
-		if(strcmp(linkedlist->uri, URI) == 0)
-		{
-			return linkedlist;
-		}
-		linkedlist = linkedlist->next;
-	}
-	return NULL; //user was not found
+rwlockHTNodeObj *find_URI(char *URI, Table *table) {
+    size_t index = hash(URI) % (table->num_buckets);
+    rwlockHTNodeObj *linkedlist = (table->buckets)[index];
+    while (linkedlist != NULL) {
+        if (strcmp(linkedlist->uri, URI) == 0) {
+            return linkedlist;
+        }
+        linkedlist = linkedlist->next;
+    }
+    return NULL;
 }
 
 void handle_connection(int);
@@ -150,17 +139,15 @@ int main(int argc, char **argv) {
     // Parse command-line options using getopt (used previous class getopt format)
     while ((opt = getopt(argc, argv, "t:")) != -1) {
         switch (opt) {
-            case 't':
-                t = atoi(optarg);
-                break;
-            default:
-                fprintf(stderr, "Usage: %s -t <number_of_threads> <port>\n", argv[0]);
-                exit(EXIT_FAILURE);
+        case 't': t = atoi(optarg); break;
+        default:
+            fprintf(stderr, "Usage: %s -t <number_of_threads> <port>\n", argv[0]);
+            exit(EXIT_FAILURE);
         }
     }
 
     char *endptr = NULL;
-    size_t port = (size_t) strtoull(argv[1], &endptr, 10);
+    size_t port = (size_t) strtoull(argv[optind], &endptr, 10);
     if (endptr && *endptr != '\0') {
         warnx("invalid port number: %s", argv[1]);
         return EXIT_FAILURE;
@@ -171,11 +158,10 @@ int main(int argc, char **argv) {
     listener_init(&sock, port);
 
     // Thread threads[t];
-    ThreadObj* threads[t];
+    ThreadObj *threads[t];
     Table *rwlock_ht = create_table(100);
     queue_t *queue = queue_new(t);
     pthread_t *thread_ids = malloc(sizeof(pthread_t) * t);
-
 
     // Create worker threads
     for (size_t i = 0; i <= t; ++i) {
@@ -184,7 +170,8 @@ int main(int argc, char **argv) {
         threads[i]->rwlockHT = rwlock_ht;
         threads[i]->queue = queue;
 
-        pthread_create(&thread_ids[i], NULL, (void *(*) (void *)) worker_thread, (void *) threads[i]);
+        pthread_create(
+            &thread_ids[i], NULL, (void *(*) (void *) ) worker_thread, (void *) threads[i]);
     }
 
     while (1) {
@@ -194,7 +181,6 @@ int main(int argc, char **argv) {
 
     return EXIT_SUCCESS;
 }
-
 
 void worker_thread(void *args) {
 
@@ -207,7 +193,7 @@ void worker_thread(void *args) {
         uintptr_t connfd = 0;
         queue_pop(queue, (void **) &connfd);
         handle_connection(connfd);
-        //close(connfd);
+        close(connfd);
     }
 }
 
@@ -220,7 +206,7 @@ void handle_connection(int connfd) {
     if (res != NULL) {
         conn_send_response(conn, res);
     } else {
-        debug("%s", conn_str(conn));
+        // debug("%s", conn_str(conn));
         const Request_t *req = conn_get_request(conn);
         if (req == &REQUEST_GET) {
             handle_get(conn);
@@ -234,36 +220,20 @@ void handle_connection(int connfd) {
 
 void handle_get(conn_t *conn) {
 
+    pthread_mutex_lock(&mutex);
+
     const Response_t *res = NULL;
 
     char *uri = conn_get_uri(conn);
-    debug("GET request no implemented. But we want to get %s", uri);
+    // debug("GET request no implemented. But we want to get %s", uri);
     bool existed = access(uri, F_OK) == 0;
-
-    pthread_mutex_lock(&file_lock);
-
-    // 1. Open the file.
-    int fd = open(uri, O_RDONLY);
-    if (fd < 0) {
-        debug("%s: %d", uri, errno);
-
-        if (errno == EACCES) {
-            res = &RESPONSE_FORBIDDEN;
-        } else if (errno == ENOENT) {
-            res = &RESPONSE_NOT_FOUND;
-        } else {
-            res = &RESPONSE_INTERNAL_SERVER_ERROR;
-        }
-
-        goto out;
-    }
 
     // get_rwlock---------------------------------
     pthread_mutex_lock(&table_mutex);
     rwlock_t *rwlock;
-    rwlockHTNodeObj* node;
+    rwlockHTNodeObj *node;
     node = find_URI(uri, hashtable);
-    if (node != NULL){
+    if (node != NULL) {
         rwlock = node->rwlock;
     } else {
         rwlock = rwlock_new(N_WAY, 1);
@@ -273,68 +243,92 @@ void handle_get(conn_t *conn) {
     // get_rwlock---------------------------------
 
     reader_lock(rwlock);
-    pthread_mutex_unlock(&file_lock);
+
+    // 1. Open the file.
+    int fd = open(uri, O_RDONLY);
+    pthread_mutex_unlock(&mutex);
+
+    if (fd < 0) {
+        // debug("%s: %d", uri, errno);
+
+        if (errno == EACCES) {
+            res = &RESPONSE_FORBIDDEN;
+            conn_send_response(conn, res);
+        } else if (errno == ENOENT) {
+            res = &RESPONSE_NOT_FOUND;
+            conn_send_response(conn, res);
+        } else {
+            res = &RESPONSE_INTERNAL_SERVER_ERROR;
+            conn_send_response(conn, res);
+        }
+    }
 
     // 2. Get the size of the file.
     struct stat st;
     if (fstat(fd, &st) < 0) {
         res = &RESPONSE_INTERNAL_SERVER_ERROR;
-        goto out;
+        conn_send_response(conn, res);
     }
 
     // 3. Check if the file is a directory.
     if (S_ISDIR(st.st_mode)) {
         res = &RESPONSE_FORBIDDEN; // Assuming directories are forbidden
-        goto out;
+        conn_send_response(conn, res);
     }
 
     // 4. Send the file
-    if(res == NULL && existed){
+    if (res == NULL && existed) {
         res = conn_send_file(conn, fd, st.st_size);
         res = &RESPONSE_OK;
     }
-    
+
+    fprintf(stderr, "GET,%s,%hu,%s\n", uri, response_get_code(res),
+        conn_get_header(conn, "Request-Id"));
     reader_unlock(rwlock);
     close(fd);
-
-out:
-    // Send the response
-    conn_send_response(conn, res);
 }
 
 void handle_put(conn_t *conn) {
-    
+
+    pthread_mutex_lock(&mutex);
+
     const Response_t *res = NULL;
 
     char *uri = conn_get_uri(conn);
-    debug("PUT request no implemented. But we want to get %s", uri);
+    // debug("PUT request no implemented. But we want to get %s", uri);
 
     // Check if file already exists before opening it.
     bool existed = access(uri, F_OK) == 0;
 
-    debug("%s existed? %d", uri, existed);
+    // get_rwlock---------------------------------
+    pthread_mutex_lock(&table_mutex);
+    rwlock_t *rwlock;
+    rwlockHTNodeObj *node;
+    node = find_URI(uri, hashtable);
+    if (node != NULL) {
+        rwlock = node->rwlock;
+    } else {
+        rwlock = rwlock_new(N_WAY, 1);
+        add_to_table(uri, rwlock, hashtable);
+    }
+    pthread_mutex_unlock(&table_mutex);
+    // get_rwlock---------------------------------
 
-    // pthread_mutex_lock(&mutex);
-    // if(rwlock_ht_contains(rwlock_ht, uri)){
-    //     rwlock = rwlock_ht_get(rwlock_ht, uri);
-    // }else{
-    //     rwlock = rwlock_new[N_WAY, 1];
-    //     rwlock_ht_set(rwlock_ht, rwlock, uri);
-    // }
-    // pthread_mutex_unlock(&mutex);
-
-    // writer_lock(rwlock);
+    writer_lock(rwlock);
 
     // Open the file.
     int fd = open(uri, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+
+    pthread_mutex_unlock(&mutex);
+
     if (fd < 0) {
-        debug("%s: %d", uri, errno);
+        // debug("%s: %d", uri, errno);
         if (errno == EACCES || errno == EISDIR || errno == ENOENT) {
             res = &RESPONSE_FORBIDDEN;
-            goto out;
+            conn_send_response(conn, res);
         } else {
             res = &RESPONSE_INTERNAL_SERVER_ERROR;
-            goto out;
+            conn_send_response(conn, res);
         }
     }
 
@@ -346,16 +340,15 @@ void handle_put(conn_t *conn) {
         res = &RESPONSE_CREATED;
     }
 
-    //writer_unlock(rwlock);
-    close(fd);
-
-out:
+    fprintf(stderr, "PUT,%s,%hu,%s\n", uri, response_get_code(res),
+        conn_get_header(conn, "Request-Id"));
     conn_send_response(conn, res);
-
+    writer_unlock(rwlock);
+    close(fd);
 }
 
 void handle_unsupported(conn_t *conn) {
-    debug("handling unsupported request");
+    // debug("handling unsupported request");
 
     // send responses
     conn_send_response(conn, &RESPONSE_NOT_IMPLEMENTED);
