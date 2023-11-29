@@ -19,7 +19,7 @@
 #include "request.h"
 #include "rwlock.h"
 
-// Work used from previous class
+// Work used from previous class, hash functions taken from previous class
 // Help recieved from classmate, all help shown on whiteboard no code was shared
 
 typedef struct rwlockHTNodeObj {
