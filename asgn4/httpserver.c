@@ -90,7 +90,7 @@ rwlockHTNodeObj *add_node_to_list(char *uri, rwlock_t *rwlock, rwlockHTNodeObj *
 }
 
 // Function to add a new node to the hash table
-void add_to_table(char *uri, rwlock_t *rwlock, Table *table) {
+void add_to_hash_table(char *uri, rwlock_t *rwlock, Table *table) {
     unsigned long hashvalue = hash(uri);
     size_t index = hashvalue % table->num_buckets;
     rwlockHTNodeObj *linkedlist = (table->buckets)[index];
@@ -246,7 +246,7 @@ void handle_get(conn_t *conn) {
         rwlock = node->rwlock;
     } else {
         rwlock = rwlock_new(N_WAY, 1);
-        add_to_table(uri, rwlock, hashtable);
+        add_to_hash_table(uri, rwlock, hashtable);
     }
     pthread_mutex_unlock(&table_mutex);
 
@@ -317,7 +317,7 @@ void handle_put(conn_t *conn) {
         rwlock = node->rwlock;
     } else {
         rwlock = rwlock_new(N_WAY, 1);
-        add_to_table(uri, rwlock, hashtable);
+        add_to_hash_table(uri, rwlock, hashtable);
     }
     pthread_mutex_unlock(&table_mutex);
 
