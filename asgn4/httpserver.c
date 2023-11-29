@@ -352,7 +352,6 @@ void handle_put(conn_t *conn) {
 
     conn_send_response(conn, res);
 
-
     // Audit log
     fprintf(stderr, "PUT,%s,%hu,%s\n", uri, response_get_code(res),
         conn_get_header(conn, "Request-Id"));
