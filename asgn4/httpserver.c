@@ -56,8 +56,8 @@ queue_t *queue;
 
 pthread_mutex_t mutex;
 pthread_mutex_t table_mutex;
-pthread_mutex_t audit_lock;
 
+// Function to create a hash table
 Table *create_table(size_t num_buckets) {
     Table *t = calloc(1, sizeof(Table)); //allocate space for the table
     t->buckets = calloc(num_buckets, sizeof(rwlockHTNodeObj *)); //allocate space for the array
@@ -79,6 +79,7 @@ unsigned long hash(char *str) {
     return hash;
 }
 
+// Function to create a new node and add it to the linked list
 rwlockHTNodeObj *add_node_to_list(char *uri, rwlock_t *rwlock, rwlockHTNodeObj *bucket) {
     rwlockHTNodeObj *new_node;
     new_node = calloc(1, sizeof(rwlockHTNodeObj));
@@ -88,6 +89,7 @@ rwlockHTNodeObj *add_node_to_list(char *uri, rwlock_t *rwlock, rwlockHTNodeObj *
     return new_node;
 }
 
+// Function to add a new node to the hash table
 void add_to_table(char *uri, rwlock_t *rwlock, Table *table) {
     unsigned long hashvalue = hash(uri);
     size_t index = hashvalue % table->num_buckets;
@@ -104,6 +106,7 @@ void add_to_table(char *uri, rwlock_t *rwlock, Table *table) {
     return;
 }
 
+// Function to find a node with URI in the hash table
 rwlockHTNodeObj *find_URI(char *uri, Table *table) {
     size_t index = hash(uri) % (table->num_buckets);
     rwlockHTNodeObj *linkedlist = (table->buckets)[index];
@@ -146,6 +149,7 @@ int main(int argc, char **argv) {
         }
     }
 
+    // Parse the port number
     char *endptr = NULL;
     size_t port = (size_t) strtoull(argv[optind], &endptr, 10);
     if (endptr && *endptr != '\0') {
@@ -157,6 +161,7 @@ int main(int argc, char **argv) {
     Listener_Socket sock;
     listener_init(&sock, port);
 
+    // Create and initialize the global hashtable
     hashtable = create_table(100);
 
     // Thread threads[t];
@@ -176,6 +181,7 @@ int main(int argc, char **argv) {
             &thread_ids[i], NULL, (void *(*) (void *) ) worker_thread, (void *) threads[i]);
     }
 
+    // Accept incoming connections and push them into the queue
     while (1) {
         uintptr_t connfd = listener_accept(&sock);
         queue_push(queue, (void *) connfd);
@@ -184,6 +190,7 @@ int main(int argc, char **argv) {
     return EXIT_SUCCESS;
 }
 
+// From TA Mitchell pseudo code
 void worker_thread(void *args) {
 
     Thread thread = (Thread) args;
@@ -199,6 +206,7 @@ void worker_thread(void *args) {
     }
 }
 
+// From TA Mitchell pseudo code
 void handle_connection(int connfd) {
 
     conn_t *conn = conn_new(connfd);
@@ -288,6 +296,7 @@ void handle_get(conn_t *conn) {
     close(fd);
 }
 
+// Modified from starter code
 void handle_put(conn_t *conn) {
 
     pthread_mutex_lock(&mutex);
@@ -345,6 +354,7 @@ void handle_put(conn_t *conn) {
     close(fd);
 }
 
+// From starter code
 void handle_unsupported(conn_t *conn) {
     // debug("handling unsupported request");
 
