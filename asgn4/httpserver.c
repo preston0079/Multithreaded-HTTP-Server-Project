@@ -245,15 +245,16 @@ void handle_get(conn_t *conn) {
     bool existed = access(uri, F_OK) == 0;
 
     pthread_mutex_lock(&table_mutex);
+
     rwlock_t *rwlock;
-    rwlockHTNodeObj *node;
-    node = find_URI(uri, hashtable);
+    rwlockHTNodeObj *node = find_URI(uri, hashtable);
     if (node != NULL) {
         rwlock = node->rwlock;
     } else {
         rwlock = rwlock_new(N_WAY, 1);
         add_to_hash_table(uri, rwlock, hashtable);
     }
+
     pthread_mutex_unlock(&table_mutex);
 
     reader_lock(rwlock);
@@ -318,15 +319,16 @@ void handle_put(conn_t *conn) {
     bool existed = access(uri, F_OK) == 0;
 
     pthread_mutex_lock(&table_mutex);
+
     rwlock_t *rwlock;
-    rwlockHTNodeObj *node;
-    node = find_URI(uri, hashtable);
+    rwlockHTNodeObj *node = find_URI(uri, hashtable);
     if (node != NULL) {
         rwlock = node->rwlock;
     } else {
         rwlock = rwlock_new(N_WAY, 1);
         add_to_hash_table(uri, rwlock, hashtable);
     }
+
     pthread_mutex_unlock(&table_mutex);
 
     writer_lock(rwlock);
