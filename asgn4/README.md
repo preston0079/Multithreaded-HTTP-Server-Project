@@ -51,4 +51,4 @@ Compiles the files that are part of this assignment and make them executable.
 
 ## Comments
 
-Starter code and TA pseudocode used.
+Starter code and TA pseudocode used. Work used from previous class. Help recieved from classmate, all help shown on whiteboard no code was shared.
