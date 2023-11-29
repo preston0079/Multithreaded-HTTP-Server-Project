@@ -20,6 +20,7 @@
 #include "rwlock.h"
 
 // Work used from previous class - hash table functions
+// Help recieved from classmate, all help shown on whiteboard no code was shared
 
 typedef struct rwlockHTNodeObj {
     char *uri;
