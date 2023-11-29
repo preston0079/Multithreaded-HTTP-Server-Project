@@ -287,7 +287,7 @@ void handle_get(conn_t *conn) {
 
     // 3. Check if the file is a directory.
     if (S_ISDIR(st.st_mode)) {
-        res = &RESPONSE_FORBIDDEN; // Assuming directories are forbidden
+        res = &RESPONSE_FORBIDDEN;
         conn_send_response(conn, res);
     }
 
