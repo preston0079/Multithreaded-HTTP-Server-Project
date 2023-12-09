@@ -13,7 +13,7 @@ This program implements a cache that supports first-in-first-out (FIFO), least-r
 
 Input: "make" into terminal to compile files.
 
-./cacher [-N size] <policy>
+./cacher [-N size] [policy]
 
 policy: -F (First-In First-Out), -L (Least Recently Used), or -C (Clock)
 
