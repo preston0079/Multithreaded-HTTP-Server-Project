@@ -197,16 +197,12 @@ int insert_clock(Cache *cache, void *element) {
     return 0; // return false if the element was NOT in the cache
 }
 
-// Function to free the memory used by the cache
 void free_cache(Cache *cache) {
     if (cache == NULL) {
         return;
     }
 
-    // Free the memory for the cache list
     free_list(cache->list);
-
-    // Free the memory for the history list
     free_list(cache->historylist);
 
     // Free the memory for the cache itself
