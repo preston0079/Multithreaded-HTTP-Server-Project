@@ -34,15 +34,15 @@ int insert_lru(Cache *cache, void *element);
 int insert_clock(Cache *cache, void *element);
 void free_cache(Cache *cache);
 
-int list_is_full(List *list);
-void list_add_back(List *list, char *data);
-void list_remove_front(List *list);
 int list_contains_TF(List *list, char *element);
-Node *list_search_for_element(List *list, char *element);
+int list_is_full(List *list);
+void list_remove_front(List *list);
+void list_add_back(List *list, char *data);
 void list_move_to_end(List *list, char *element);
+Node *list_search_for_element(List *list, char *element);
 Node *list_get_element_at_index(List *list, int index);
-void list_overwrite_at_index(List *list, int index, char *data);
 int list_get_max_size(List *list);
+void list_overwrite_at_index(List *list, int index, char *data);
 void free_list(List *list);
 
 // void print_list(List *list) {
@@ -53,7 +53,7 @@ void free_list(List *list);
 
 //     Node *current = list->head;
 //     while (current != NULL) {
-//         printf("%s, ", current->data); // Assuming the data is of type char*
+//         printf("%s, ", current->data);
 //         current = current->next;
 //     }
 //     printf("\n");
@@ -202,6 +202,7 @@ void free_cache(Cache *cache) {
         return;
     }
 
+    // Make sure to free both list and history list
     free_list(cache->list);
     free_list(cache->historylist);
 
@@ -209,8 +210,41 @@ void free_cache(Cache *cache) {
     free(cache);
 }
 
+// Function to check if the list contains a specific element (returns 1 or 0)
+int list_contains_TF(List *list, char *element) {
+    if (list == NULL || element == NULL) {
+        return -1;
+    }
+
+    Node *current = list->head;
+    while (current != NULL) {
+        // strcmp for string comparison
+        if (strcmp(current->data, element) == 0) {
+            return 1; // Found in the list
+        }
+        current = current->next;
+    }
+
+    return 0; // Not found in the list
+}
+
 int list_is_full(List *list) {
     return list->size == list->max_size;
+}
+
+void list_remove_front(List *list) {
+    if (list == NULL || list->head == NULL) {
+        return;
+    }
+
+    Node *front = list->head;
+    list->head = front->next;
+
+    // Free the data and the node
+    free(front->data);
+    free(front);
+
+    list->size--;
 }
 
 void list_add_back(List *list, char *data) {
@@ -218,7 +252,7 @@ void list_add_back(List *list, char *data) {
         return; // NULL error
     }
 
-    // Duplicate the data
+    // Duplicate the data using strdup
     char *new_data = strdup(data);
     if (new_data == NULL) {
         perror("Failed to allocate memory for a new node");
@@ -250,56 +284,6 @@ void list_add_back(List *list, char *data) {
     }
 
     list->size++;
-}
-
-void list_remove_front(List *list) {
-    if (list == NULL || list->head == NULL) {
-        return;
-    }
-
-    Node *front = list->head;
-    list->head = front->next;
-
-    // Free the data and the node
-    free(front->data);
-    free(front);
-
-    list->size--;
-}
-
-// Function to check if the list contains a specific element (returns 1 or 0)
-int list_contains_TF(List *list, char *element) {
-    if (list == NULL || element == NULL) {
-        return -1;
-    }
-
-    Node *current = list->head;
-    while (current != NULL) {
-        // Using strcmp for string comparison
-        if (strcmp(current->data, element) == 0) {
-            return 1; // Element found in the list
-        }
-        current = current->next;
-    }
-
-    return 0; // Element not found in the list
-}
-
-// Function to search for an element in the list and returns the node
-Node *list_search_for_element(List *list, char *element) {
-    if (list == NULL || element == NULL) {
-        return NULL;
-    }
-
-    Node *current = list->head;
-    while (current != NULL) {
-        if (strcmp(current->data, element) == 0) {
-            return current;
-        }
-        current = current->next;
-    }
-
-    return NULL;
 }
 
 void list_move_to_end(List *list, char *element) {
@@ -338,6 +322,23 @@ void list_move_to_end(List *list, char *element) {
     }
 }
 
+// Function to search for an element in the list and returns the node
+Node *list_search_for_element(List *list, char *element) {
+    if (list == NULL || element == NULL) {
+        return NULL; // NULL error
+    }
+
+    Node *current = list->head;
+    while (current != NULL) {
+        if (strcmp(current->data, element) == 0) {
+            return current; // If found
+        }
+        current = current->next;
+    }
+
+    return NULL;
+}
+
 Node *list_get_element_at_index(List *list, int index) {
     if (list == NULL || index < 0 || index > list->size) {
         return NULL;
@@ -353,6 +354,14 @@ Node *list_get_element_at_index(List *list, int index) {
     }
 
     return current;
+}
+
+int list_get_max_size(List *list) {
+    if (list == NULL) {
+        return -1;
+    }
+
+    return list->max_size;
 }
 
 void list_overwrite_at_index(List *list, int index, char *data) {
@@ -381,14 +390,6 @@ void list_overwrite_at_index(List *list, int index, char *data) {
             return;
         }
     }
-}
-
-int list_get_max_size(List *list) {
-    if (list == NULL) {
-        return -1;
-    }
-
-    return list->max_size;
 }
 
 void free_list(List *list) {
@@ -499,7 +500,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Print summary
+    // Print summary (Compulsory / Capacity)
     printf("%d %d\n", cache->num_compulsory_misses, cache->num_capacity_misses);
 
     // Free memory used by the cache
